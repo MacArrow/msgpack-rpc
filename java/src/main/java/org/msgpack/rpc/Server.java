@@ -32,6 +32,7 @@ import org.msgpack.rpc.transport.ServerTransport;
 import org.msgpack.rpc.transport.MessageSendable;
 import org.msgpack.rpc.loop.EventLoop;
 import org.msgpack.rpc.error.RPCError;
+import org.msgpack.rpc.message.NotifyMessage;
 
 public class Server extends SessionPool {
 	private Dispatcher dp;
@@ -83,7 +84,7 @@ public class Server extends SessionPool {
 		}
 		super.close();
 	}
-
+        
 	public void onRequest(MessageSendable channel,
 			int msgid, String method, MessagePackObject args) {
 		Request request = new Request(channel, msgid, method, args);

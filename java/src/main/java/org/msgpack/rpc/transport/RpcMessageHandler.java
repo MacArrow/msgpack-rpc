@@ -118,10 +118,12 @@ public class RpcMessageHandler {
 
 	private void handleNotify(MessageSendable channel,
 			String method, MessagePackObject args) {
-		if(server == null) {
-			return;  // FIXME error result?
+		if(server != null) {
+			server.onNotify(method, args);
 		}
-		server.onNotify(method, args);
+		if(session != null) {
+                    session.onNotify(method, args);
+                }
 	}
 
 	private void handleResponse(MessageSendable channel,

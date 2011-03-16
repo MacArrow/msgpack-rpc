@@ -30,6 +30,8 @@ import org.msgpack.rpc.message.NotifyMessage;
 import org.msgpack.rpc.reflect.Reflect;
 import org.msgpack.rpc.transport.ClientTransport;
 import org.msgpack.rpc.config.ClientConfig;
+import org.msgpack.rpc.dispatcher.Dispatcher;
+import org.msgpack.rpc.dispatcher.MethodDispatcher;
 import org.msgpack.rpc.loop.EventLoop;
 
 public class Session {
@@ -41,6 +43,8 @@ public class Session {
 	private AtomicInteger seqid = new AtomicInteger(0);  // FIXME rand()?
 	private Map<Integer, FutureImpl> reqtable = new HashMap<Integer, FutureImpl>();
 
+        private Dispatcher dp;
+
 	Session(Address address, ClientConfig config, EventLoop loop) {
 		this.address = address;
 		this.loop = loop;
@@ -50,6 +54,14 @@ public class Session {
 
 	public <T> T proxy(Class<T> iface) {
 		return Reflect.reflectProxy(iface).newProxyInstance(this);
+	}
+
+        public void setNotifier(Dispatcher dp) {
+		this.dp = dp;
+	}
+
+	public void setNotifier(Object handler) {
+		this.dp = new MethodDispatcher(handler);
 	}
 
 	public Address getAddress() {
@@ -139,6 +151,16 @@ public class Session {
 			return;
 		}
 		f.setResult(result, error);
+	}
+
+        public void onNotify(String method, MessagePackObject args) {
+		Request request = new Request(method, args);
+		try {
+                        if(dp != null)
+                            dp.dispatch(request);
+		} catch(Exception e) {
+			// FIXME ignore?
+		}
 	}
 
 	void stepTimeout() {
